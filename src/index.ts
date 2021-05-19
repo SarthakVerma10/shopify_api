@@ -5,7 +5,7 @@ require('dotenv').config();
 const path = require('path');
 const cors = require('cors');
 const MongoClient = require('mongodb').MongoClient;
-
+const { ObjectId } = require('bson')
 
 const app = express();
 
@@ -94,11 +94,63 @@ app.post('/api/save/:id', async(req, res) => {
   res.send(true)
 })
 
+app.post('/api/update/:id', async(req, res) => {
+  console.log('updating template ', req.params.id);
+  console.log('body: ', req.body)
+  const filter = { _id: ObjectId(req.params.id) }
+  const updateDoc = {
+    $set: {
+      body: req.body.body,
+      counters: req.body.counters,
+      schemaVersion: req.body.schemaVersion
+    }
+  }
+
+  console.log('body: ', req.body.body);
+  
+  const options = { upsert: false }
+  await db.collection('templates').updateOne(filter, updateDoc, options)
+  res.send(true)
+})
+
 app.get('/api/get/:id', async(req, res) => {
   const user = { user: req.params.id }
   const response = await db.collection('templates').find(user).toArray()
   console.log('templates fetched');
   res.send(response)
+})
+
+app.get('/api/test/get', async(req, res) => {
+  const response = await db.collection('templates').find().toArray()
+  console.log('templates all')
+  res.send(response)
+})
+
+app.post('/api/test/save/', async(req, res) => {
+  console.log('saveing new template for ');
+  console.log('body: ', req.body)
+  let template = req.body
+  await db.collection('templates').insertOne(template)
+  res.send(true)
+})
+
+app.post('/api/test/update/:id', async(req, res) => {
+  console.log('updating template ', req.params.id);
+  console.log('body: ', req.body)
+  const filter = { _id: ObjectId(req.params.id) }
+  const updateDoc = {
+    $set: {
+      body: req.body.body,
+      counters: req.body.counters,
+      schemaVersion: req.body.schemaVersion
+    }
+  }
+
+  console.log('body: ', req.body.body);
+  
+  const options = { upsert: false }
+  await db.collection('templates').updateOne(filter, updateDoc, options)
+  res.send(true)
 })
 
 app.listen(3000, () => {
